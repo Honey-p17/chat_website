@@ -18,6 +18,10 @@
       "destination": "/backend/health"
     },
     {
+      "source": "/((?!api|assets|favicon|health).*)",
+      "destination": "/frontend/index.html"
+    },
+    {
       "source": "/:path*",
       "destination": "/frontend/:path*"
     }
