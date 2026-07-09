@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Hourglass } from 'lucide-react';
 
 interface WebsiteInputProps {
     onCrawl: (url: string) => void;

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, createContext, useContext, ReactNode } from 'react';
+import { useState, useRef, useEffect, createContext, useContext, ReactNode } from 'react';
 import { api, IndexingReport, Citation } from '../services/api';
 
 export type CrawlStatus = 'idle' | 'crawling' | 'success' | 'error';
