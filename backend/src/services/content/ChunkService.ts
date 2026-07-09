@@ -12,8 +12,8 @@ export interface DocumentChunk {
 }
 
 export class ChunkService {
-    private static TARGET_WORDS = 500;
-    private static OVERLAP_WORDS = 100;
+    private static TARGET_WORDS = 300;
+    private static OVERLAP_WORDS = 45;
 
     static chunkText(text: string, title: string, url: string): DocumentChunk[] {
         // Split text into sentences using simple regex (not perfect, but works for plain text)

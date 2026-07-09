@@ -41,10 +41,27 @@ export class ChatService {
             const ai = new GoogleGenAI({ apiKey: apiKey || 'placeholder' });
             const prompt = PromptBuilder.build(question, relevantChunks);
             
-            const responseStream = await ai.models.generateContentStream({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-            });
+            let responseStream;
+            let attempts = 0;
+            const maxAttempts = 3;
+            while (attempts < maxAttempts) {
+                try {
+                    responseStream = await ai.models.generateContentStream({
+                        model: 'gemini-2.5-flash',
+                        contents: prompt,
+                    });
+                    break;
+                } catch (err: any) {
+                    attempts++;
+                    console.error(`Gemini stream attempt ${attempts} failed:`, err.message);
+                    if (attempts >= maxAttempts) throw err;
+                    await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempts - 1))); // Exponential backoff
+                }
+            }
+
+            if (!responseStream) {
+                throw new Error("Failed to initialize response stream after retries.");
+            }
 
             let fullAnswer = '';
 
@@ -93,7 +110,8 @@ export class ChatService {
                 return;
             }
 
-            res.write(`data: ${JSON.stringify({ error: 'Failed to generate response due to an internal error.' })}\n\n`);
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            res.write(`data: ${JSON.stringify({ error: `Failed to generate response: ${errorMsg}` })}\n\n`);
             res.end();
         }
     }

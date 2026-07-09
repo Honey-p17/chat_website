@@ -1,66 +1,47 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { SourcesCard, Citation } from './SourcesCard';
+import { SourcesCard } from './SourcesCard';
+import { Message } from '../hooks/useCrawl';
 
-interface MessageBubbleProps {
-    role: 'user' | 'assistant';
-    content: string;
-    sources?: Citation[];
-}
-
-const REFUSAL_PHRASE = "I couldn't find this information on the crawled website.";
-
-export function MessageBubble({ role, content, sources }: MessageBubbleProps) {
+export function MessageBubble({ role, content, sources }: Message) {
     const isUser = role === 'user';
-    const isRefusal = !isUser && content.includes(REFUSAL_PHRASE);
 
-    /* User message */
     if (isUser) {
         return (
-            <div className="flex justify-end mb-3">
-                <div className="max-w-[78%] px-4 py-2.5 rounded-2xl rounded-tr-sm bg-violet-600 text-white text-sm leading-relaxed break-words">
-                    {content}
+            <div className="flex justify-end group">
+                <div className="max-w-[80%] ml-auto flex flex-col items-end">
+                    <div className="px-5 py-3.5 rounded-2xl rounded-br-sm bg-[#8B5CF6] text-white text-[15px] leading-relaxed break-words shadow-sm">
+                        {content}
+                    </div>
                 </div>
             </div>
         );
     }
 
-    /* Grounded refusal — muted, italic, no sources */
-    if (isRefusal) {
-        return (
-            <div className="flex justify-start mb-3">
-                <div className="max-w-[80%] px-4 py-3 rounded-2xl rounded-tl-sm border border-gray-200 bg-gray-50 text-gray-400 text-sm italic leading-relaxed">
-                    {content}
-                </div>
-            </div>
-        );
-    }
-
-    /* Normal assistant answer with markdown + sources */
     return (
-        <div className="flex justify-start mb-3">
-            <div className="max-w-[80%] flex flex-col">
-                <div className="px-4 py-3 rounded-2xl rounded-tl-sm border border-gray-200 bg-white text-gray-800 text-sm leading-relaxed shadow-sm break-words">
-                    {content ? (
-                        <div className="prose prose-sm max-w-none
-                            prose-p:my-1 prose-p:leading-relaxed
-                            prose-headings:font-semibold prose-headings:my-2
-                            prose-ul:my-1 prose-ol:my-1 prose-li:my-0
-                            prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-[12px] prose-code:text-violet-700
-                            prose-code:before:content-none prose-code:after:content-none
-                            prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:rounded-xl prose-pre:p-4
-                            prose-a:text-violet-600 prose-a:no-underline hover:prose-a:underline
-                            prose-strong:text-gray-900">
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+        <div className="flex justify-start group">
+            <div className="max-w-[85%] flex flex-col">
+                <div className="px-5 py-4 rounded-2xl rounded-bl-sm bg-white border border-slate-100 shadow-sm flex flex-col gap-3 min-w-0">
+                    <div className="text-slate-700 text-[15px] leading-relaxed break-words">
+                        {content ? (
+                            <div className="prose prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-slate-50 prose-pre:border prose-pre:border-slate-100 prose-pre:text-slate-700 text-slate-700">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+                            </div>
+                        ) : (
+                            <div className="flex space-x-1.5 items-center h-6">
+                                <div className="w-1.5 h-1.5 bg-[#8B5CF6]/50 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                <div className="w-1.5 h-1.5 bg-[#8B5CF6]/50 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                <div className="w-1.5 h-1.5 bg-[#8B5CF6]/50 rounded-full animate-bounce"></div>
+                            </div>
+                        )}
+                    </div>
+                    {sources && sources.length > 0 && (
+                        <div className="mt-1 pt-3 border-t border-slate-100/60">
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sources</p>
+                            <SourcesCard sources={sources} />
                         </div>
-                    ) : (
-                        /* Streaming cursor while tokens are arriving */
-                        <span className="inline-block w-2 h-4 bg-gray-300 animate-pulse rounded-sm align-middle" />
                     )}
                 </div>
-                {sources && sources.length > 0 && (
-                    <SourcesCard sources={sources} />
-                )}
             </div>
         </div>
     );

@@ -1,108 +1,69 @@
-import { HeroSection } from '../components/HeroSection';
+import { Sparkles, Globe, MessageCircle } from 'lucide-react';
 import { WebsiteInput } from '../components/WebsiteInput';
-import { ProgressCard } from '../components/ProgressCard';
-import { ChatWindow, Message } from '../components/ChatWindow';
-import { IndexingReport } from '../services/api';
+import { ProgressChecklist } from '../components/ProgressChecklist';
+import { ChatWindow } from '../components/ChatWindow';
+import { useCrawl } from '../hooks/useCrawl';
 
-interface ChatPageProps {
-    isCrawling: boolean;
-    crawlStatus: 'idle' | 'crawling' | 'success' | 'error';
-    crawlError: string;
-    report: IndexingReport | null;
-    messages: Message[];
-    isChatting: boolean;
-    chatError: string;
-    onCrawl: (url: string) => Promise<void>;
-    onSendMessage: (msg: string) => Promise<void>;
-    onReset: () => void;
-}
+export function ChatPage() {
+    const {
+        isCrawling,
+        crawlStatus,
+        simulatedStep,
+        messages,
+        isChatting,
+        handleCrawl,
+        handleSendMessage,
+    } = useCrawl();
 
-export function ChatPage({
-    isCrawling,
-    crawlStatus,
-    crawlError,
-    report,
-    messages,
-    isChatting,
-    chatError,
-    onCrawl,
-    onSendMessage,
-    onReset,
-}: ChatPageProps) {
     const isIndexed = crawlStatus === 'success';
-    const isError   = crawlStatus === 'error';
 
     return (
-        /*
-         * Full-width page. A single centered column (max-w-4xl) holds everything.
-         * No fixed-width box, no leftover pixel values — fills the viewport.
-         */
-        <div className="w-full min-h-[calc(100vh-56px)] bg-gray-50">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 flex flex-col gap-6">
+        <div className="flex flex-col items-center w-full animate-fade-in">
+            {/* Header */}
+            <div className="text-center mb-10 w-full">
+                <h1 className="text-4xl md:text-5xl font-bold text-[#6a36f6] flex items-center justify-center gap-3 mb-4 tracking-tight font-sans">
+                    Chat with Website <Sparkles className="w-10 h-10 text-[#8553f8]" fill="currentColor" />
+                </h1>
+                <p className="text-sm md:text-base text-slate-500 font-medium">
+                    Crawl any website and get AI-powered answers from its content
+                </p>
+            </div>
 
-                {/* ── Hero ── only when completely idle */}
-                {crawlStatus === 'idle' && (
-                    <HeroSection />
-                )}
-
-                {/* ── URL input ── always visible until success */}
-                {!isIndexed && (
-                    <WebsiteInput
-                        onCrawl={onCrawl}
-                        isCrawling={isCrawling}
-                        isIndexed={false}
-                        onReset={onReset}
-                    />
-                )}
-
-                {/* ── Compact "indexed" URL bar after success ── */}
-                {isIndexed && (
-                    <WebsiteInput
-                        onCrawl={onCrawl}
-                        isCrawling={false}
-                        isIndexed={true}
-                        onReset={onReset}
-                    />
-                )}
-
-                {/* ── Progress / status banner ── */}
-                {crawlStatus !== 'idle' && (
-                    <ProgressCard status={crawlStatus} report={report} />
-                )}
-
-                {/* ── Crawl error with retry hint ── */}
-                {isError && crawlError && (
-                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3.5 flex flex-col gap-1 animate-fade-in">
-                        <p className="text-sm font-semibold text-red-700">Crawl failed</p>
-                        <p className="text-sm text-red-600">{crawlError}</p>
-                        <p className="text-xs text-red-400 mt-1">
-                            Check the URL above and click "Crawl Website" to try again.
-                        </p>
+            <div className="w-full flex flex-col space-y-8">
+                {/* Crawl Card */}
+                <div className="bg-white rounded-[24px] p-6 md:p-8 shadow-sm border border-slate-100/50">
+                    <div className="flex items-center gap-3 mb-2">
+                        <Globe className="w-5 h-5 text-blue-400" />
+                        <h2 className="text-xl font-bold text-slate-800 tracking-tight">Crawl Website</h2>
                     </div>
-                )}
+                    <p className="text-sm text-slate-500 mb-6">Enter a website URL and create a searchable knowledge base.</p>
+                    
+                    <WebsiteInput onCrawl={handleCrawl} isCrawling={isCrawling} />
 
-                {/* ── Chat error (during Q&A) ── */}
-                {chatError && isIndexed && (
-                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 animate-fade-in">
-                        <p className="text-sm text-amber-700">{chatError}</p>
+                    {crawlStatus !== 'idle' && (
+                        <div className="mt-6 w-full">
+                            <ProgressChecklist simulatedStep={simulatedStep} />
+                        </div>
+                    )}
+                </div>
+
+                {/* Chat Card */}
+                <div className="bg-white rounded-[24px] p-6 md:p-8 shadow-sm border border-slate-100/50 flex flex-col min-h-[500px]">
+                    <div className="flex items-center gap-3 mb-2">
+                        <MessageCircle className="w-5 h-5 text-slate-400" fill="currentColor" stroke="none" />
+                        <h2 className="text-xl font-bold text-slate-800 tracking-tight">Ask Questions</h2>
                     </div>
-                )}
-
-                {/*
-                 * ── Chat panel ──
-                 * ONLY rendered after a successful crawl.
-                 * Before crawl completes: nothing here at all.
-                 * On error: nothing here (error banner above is enough).
-                 */}
-                {isIndexed && (
-                    <div className="animate-fade-in-up">
+                    <p className="text-sm text-slate-500 mb-6">Ask anything about the crawled website.</p>
+                    
+                    <div className="w-full flex-1 flex flex-col min-h-0 bg-[#fbfbfe] rounded-2xl border border-slate-100/50 overflow-hidden relative">
                         <ChatWindow
                             messages={messages}
-                            onSendMessage={onSendMessage}
+                            onSendMessage={handleSendMessage}
                             isLoading={isChatting}
+                            isIndexed={isIndexed}
                         />
                     </div>
-                )}
+                </div>
             </div>
         </div>
     );
