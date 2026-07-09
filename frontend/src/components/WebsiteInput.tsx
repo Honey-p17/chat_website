@@ -36,11 +36,6 @@ export function WebsiteInput({ onCrawl, isCrawling }: WebsiteInputProps) {
                     {isCrawling ? 'Crawling...' : 'Crawl'}
                 </button>
             </form>
-            
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium pl-1">
-                <Hourglass className="w-3.5 h-3.5 text-amber-500" />
-                <span>Processing usually takes 5-15 seconds depending on website size.</span>
-            </div>
         </div>
     );
 }

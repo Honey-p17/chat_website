@@ -5,19 +5,20 @@ import { AnalyticsPage } from './pages/AnalyticsPage';
 function App() {
     return (
         <div className="min-h-screen w-full flex flex-col items-center bg-[#f8f6fd] text-slate-800 font-sans">
-            <div className="flex-1 w-full max-w-4xl px-4 sm:px-6 py-12 md:py-20 flex flex-col">
+            <header className="w-full text-center pt-8 pb-4 flex justify-center gap-6 text-[15px] font-medium text-slate-500">
+                <Link to="/" className="hover:text-purple-600 transition-colors">Chat</Link>
+                <Link to="/analytics" className="hover:text-purple-600 transition-colors">Analytics</Link>
+            </header>
+
+            <div className="flex-1 w-full max-w-4xl px-4 sm:px-6 py-6 md:py-10 flex flex-col">
                 <Routes>
                     <Route path="/" element={<ChatPage />} />
                     <Route path="/analytics" element={<AnalyticsPage />} />
                 </Routes>
             </div>
             
-            <footer className="w-full text-center py-8 text-sm text-slate-400 flex justify-center gap-4">
+            <footer className="w-full text-center py-8 text-sm text-slate-400 flex justify-center">
                 <span>Powered by RAG & Gemini API 🚀</span>
-                <span>•</span>
-                <Link to="/analytics" className="hover:text-purple-500 transition-colors">Analytics</Link>
-                <span>•</span>
-                <Link to="/" className="hover:text-purple-500 transition-colors">Chat</Link>
             </footer>
         </div>
     );
