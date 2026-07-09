@@ -13,7 +13,7 @@ function App() {
             </div>
             
             <footer className="w-full text-center py-8 text-sm text-slate-400 flex justify-center gap-4">
-                <span>Powered by RAG & Groq 🚀</span>
+                <span>Powered by RAG & Gemini API 🚀</span>
                 <span>•</span>
                 <Link to="/analytics" className="hover:text-purple-500 transition-colors">Analytics</Link>
                 <span>•</span>
