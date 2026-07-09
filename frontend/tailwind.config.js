@@ -1,14 +1,3 @@
 /** @type {import('tailwindcss').Config} */
-export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
-  darkMode: 'class',
-  theme: {
-    extend: {},
-  },
-  plugins: [
-    require('@tailwindcss/typography'),
-  ],
-}
+/* This file is intentionally minimal. Tailwind v4 is configured via index.css */
+export default {}

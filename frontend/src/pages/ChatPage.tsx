@@ -1,85 +1,95 @@
-import { Message } from '../components/ChatWindow';
+import { HeroSection } from '../components/HeroSection';
 import { WebsiteInput } from '../components/WebsiteInput';
 import { ProgressCard } from '../components/ProgressCard';
-import { ChatWindow } from '../components/ChatWindow';
-import { ErrorBanner } from '../components/ErrorBanner';
-import { HeroSection } from '../components/HeroSection';
-import { SuggestedQuestions } from '../components/SuggestedQuestions';
+import { ChatWindow, Message } from '../components/ChatWindow';
+import { IndexingReport } from '../services/api';
 
 interface ChatPageProps {
     isCrawling: boolean;
     crawlStatus: 'idle' | 'crawling' | 'success' | 'error';
     crawlError: string;
+    report: IndexingReport | null;
     messages: Message[];
     isChatting: boolean;
     chatError: string;
     onCrawl: (url: string) => Promise<void>;
     onSendMessage: (msg: string) => Promise<void>;
+    onReset: () => void;
 }
 
 export function ChatPage({
     isCrawling,
     crawlStatus,
     crawlError,
+    report,
     messages,
     isChatting,
     chatError,
     onCrawl,
-    onSendMessage
+    onSendMessage,
+    onReset,
 }: ChatPageProps) {
     const isIndexed = crawlStatus === 'success';
 
     return (
-        <div className="flex-1 flex flex-col items-center w-full max-w-5xl mx-auto px-4 py-8">
-            
-            {/* Show Hero only when completely idle */}
-            {crawlStatus === 'idle' && !isCrawling && (
-                <div className="mt-12 w-full flex flex-col items-center animate-fade-in-up">
-                    <HeroSection />
-                </div>
+        <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-10 flex flex-col gap-8">
+            {/* Hero — hide once indexed */}
+            {crawlStatus === 'idle' && (
+                <HeroSection />
             )}
 
-            {/* URL Input Box */}
-            <div className={`w-full transition-all duration-500 ease-in-out ${crawlStatus === 'idle' ? 'mt-8 max-w-2xl' : 'mt-2 max-w-5xl'}`}>
-                <WebsiteInput onCrawl={onCrawl} isCrawling={isCrawling} isIndexed={isIndexed} />
-            </div>
-
-            {/* Error banners */}
-            {crawlError && (
-                <div className="w-full mt-4">
-                    <ErrorBanner message={crawlError} />
-                </div>
+            {/* URL input (always visible until indexed) */}
+            {!isIndexed && (
+                <WebsiteInput
+                    onCrawl={onCrawl}
+                    isCrawling={isCrawling}
+                    isIndexed={isIndexed}
+                    onReset={onReset}
+                />
             )}
 
-            {chatError && (
-                <div className="w-full mt-4">
-                    <ErrorBanner message={chatError} />
-                </div>
-            )}
-
-            {/* Progress Card (during crawling) */}
-            <div className="w-full mt-4">
-                <ProgressCard status={crawlStatus} />
-            </div>
-
-            {/* Suggested Questions (only right after indexing, when no messages exist) */}
-            {isIndexed && messages.length === 0 && (
-                <div className="w-full mt-8">
-                    <SuggestedQuestions onSelect={onSendMessage} />
-                </div>
-            )}
-
-            {/* Chat Window */}
+            {/* Indexed compact bar */}
             {isIndexed && (
-                <div className={`w-full flex-1 transition-all duration-500 ${messages.length > 0 ? 'mt-4 opacity-100' : 'mt-0 opacity-0 h-0 overflow-hidden'}`}>
-                    <ChatWindow 
-                        messages={messages}
-                        onSendMessage={onSendMessage}
-                        isLoading={isChatting}
-                        isIndexed={isIndexed}
-                    />
+                <WebsiteInput
+                    onCrawl={onCrawl}
+                    isCrawling={false}
+                    isIndexed={true}
+                    onReset={onReset}
+                />
+            )}
+
+            {/* Progress / status card */}
+            {crawlStatus !== 'idle' && (
+                <ProgressCard
+                    status={crawlStatus}
+                    report={report}
+                />
+            )}
+
+            {/* Crawl error */}
+            {crawlError && (
+                <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600 animate-fade-in">
+                    {crawlError}
                 </div>
             )}
-        </div>
+
+            {/* Chat error */}
+            {chatError && (
+                <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-2.5 text-sm text-amber-700 animate-fade-in">
+                    {chatError}
+                </div>
+            )}
+
+            {/* Divider + chat interface */}
+            <div className="flex-1 flex flex-col">
+                {isIndexed && <div className="mb-4 h-px bg-gray-100" />}
+                <ChatWindow
+                    messages={messages}
+                    onSendMessage={onSendMessage}
+                    isLoading={isChatting}
+                    isIndexed={isIndexed}
+                />
+            </div>
+        </main>
     );
 }

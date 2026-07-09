@@ -1,4 +1,3 @@
-import { User, Bot } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { SourcesCard, Citation } from './SourcesCard';
@@ -9,60 +8,62 @@ interface MessageBubbleProps {
     sources?: Citation[];
 }
 
+/** Backend emits this exact string when no relevant context found */
+const REFUSAL_PHRASE = "I couldn't find this information on the crawled website.";
+
 export function MessageBubble({ role, content, sources }: MessageBubbleProps) {
     const isUser = role === 'user';
+    const isRefusal = !isUser && content.includes(REFUSAL_PHRASE);
 
-    return (
-        <div className={`flex gap-3 py-4 animate-slide-up ${isUser ? 'justify-end' : 'justify-start'}`}>
-            {/* Avatar — only for assistant */}
-            {!isUser && (
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm shadow-purple-500/20">
-                    <Bot className="w-4 h-4 text-white" />
+    if (isUser) {
+        return (
+            <div className="flex justify-end mb-4">
+                <div className="max-w-[78%] px-4 py-2.5 rounded-2xl rounded-tr-sm bg-violet-600 text-white text-sm leading-relaxed">
+                    {content}
                 </div>
-            )}
+            </div>
+        );
+    }
 
-            <div className={`flex flex-col max-w-[85%] min-w-0 ${isUser ? 'items-end' : 'items-start'}`}>
-                {/* Bubble */}
-                <div className={`px-4 py-3 rounded-2xl text-[15px] leading-relaxed ${
-                    isUser
-                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-md shadow-sm shadow-purple-500/20'
-                        : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-gray-200 rounded-bl-md shadow-sm'
-                }`}>
-                    {isUser ? (
-                        <div className="whitespace-pre-wrap break-words">{content}</div>
+    /* Grounded refusal — muted/neutral, no sources */
+    if (isRefusal) {
+        return (
+            <div className="flex justify-start mb-4">
+                <div className="max-w-[82%] px-4 py-3 rounded-2xl rounded-tl-sm border border-gray-200 bg-gray-50 text-gray-400 text-sm italic leading-relaxed">
+                    {content}
+                </div>
+            </div>
+        );
+    }
+
+    /* Normal assistant answer */
+    return (
+        <div className="flex justify-start mb-4">
+            <div className="max-w-[82%] flex flex-col gap-0">
+                <div className="px-4 py-3 rounded-2xl rounded-tl-sm border border-gray-200 bg-white text-gray-800 text-sm leading-relaxed shadow-sm">
+                    {content ? (
+                        <div className="prose prose-sm max-w-none
+                            prose-p:my-1 prose-p:leading-relaxed
+                            prose-headings:font-semibold prose-headings:my-2
+                            prose-ul:my-1 prose-ol:my-1 prose-li:my-0
+                            prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-[12px] prose-code:text-violet-700
+                            prose-code:before:content-none prose-code:after:content-none
+                            prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:rounded-xl prose-pre:p-4
+                            prose-a:text-violet-600 prose-a:no-underline hover:prose-a:underline
+                            prose-strong:text-gray-900">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+                        </div>
                     ) : (
-                        <div className="prose prose-sm dark:prose-invert max-w-none break-words
-                            prose-p:my-1.5 prose-p:leading-relaxed
-                            prose-a:text-purple-600 dark:prose-a:text-purple-400 prose-a:no-underline hover:prose-a:underline
-                            prose-code:bg-gray-100 dark:prose-code:bg-gray-800 prose-code:text-pink-600 dark:prose-code:text-pink-400 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-[13px] prose-code:before:content-none prose-code:after:content-none
-                            prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:p-4 prose-pre:rounded-xl prose-pre:overflow-x-auto
-                            prose-headings:font-semibold prose-headings:text-gray-900 dark:prose-headings:text-white prose-headings:my-3
-                            prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0
-                            prose-strong:text-gray-900 dark:prose-strong:text-white prose-strong:font-semibold"
-                        >
-                            {content ? (
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-                            ) : (
-                                <span className="inline-block w-2 h-4 bg-purple-500 animate-pulse rounded-sm" />
-                            )}
+                        /* Typing indicator while streaming */
+                        <div className="flex items-center gap-1 h-5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dot-bounce" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dot-bounce-2" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dot-bounce-3" />
                         </div>
                     )}
                 </div>
-
-                {/* Sources */}
-                {!isUser && sources && sources.length > 0 && (
-                    <div className="mt-2 w-full">
-                        <SourcesCard sources={sources} />
-                    </div>
-                )}
+                {sources && sources.length > 0 && <SourcesCard sources={sources} />}
             </div>
-
-            {/* Avatar — only for user */}
-            {isUser && (
-                <div className="w-8 h-8 rounded-xl bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <User className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                </div>
-            )}
         </div>
     );
 }
