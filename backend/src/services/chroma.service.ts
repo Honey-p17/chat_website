@@ -19,7 +19,6 @@ class ChromaService {
         if (this.collection) {
             return this.collection;
         }
-
         try {
             this.collection = await this.client.getOrCreateCollection({
                 name: this.collectionName,
@@ -33,11 +32,35 @@ class ChromaService {
         }
     }
 
+    /**
+     * Drop and recreate the collection so a new crawl always starts clean.
+     * This prevents chunks from a previous site leaking into retrieval for a
+     * different site — the core data-isolation requirement.
+     */
+    async resetCollection(): Promise<void> {
+        try {
+            // Invalidate cached reference first
+            this.collection = null;
+            await this.client.deleteCollection({ name: this.collectionName });
+            console.log(`Collection ${this.collectionName} deleted (reset).`);
+        } catch (error: any) {
+            // If it didn't exist yet, that is fine — just proceed
+            if (!String(error?.message).includes('does not exist') &&
+                !String(error?.message).includes('not found')) {
+                console.warn('Could not delete collection (may not exist yet):', error?.message);
+            }
+        }
+        this.collection = await this.client.createCollection({
+            name: this.collectionName,
+            metadata: { "description": "Website chunks collection for RAG" }
+        });
+        console.log(`Collection ${this.collectionName} recreated.`);
+    }
+
     async addDocuments(ids: string[], texts: string[], embeddings: number[][], metadatas: any[]): Promise<void> {
         try {
             console.log(`Saving ${ids.length} chunks...`);
             const collection = await this.getOrCreateCollection();
-            
             await collection.upsert({
                 ids,
                 embeddings,
@@ -55,15 +78,12 @@ class ChromaService {
         try {
             console.log('Searching collection...');
             const collection = await this.getOrCreateCollection();
-            
             const results = await collection.query({
                 queryEmbeddings: [questionEmbedding],
                 nResults: limit
             });
-            
             const count = results.ids[0]?.length || 0;
             console.log(`Retrieved ${count} documents.`);
-            
             return results;
         } catch (error) {
             console.error('Failed to query ChromaDB:', error);

@@ -11,17 +11,17 @@ function App() {
     const [isBackendConnected, setIsBackendConnected] = useState<boolean | null>(null);
 
     /* ── Crawl state ── */
-    const [isCrawling, setIsCrawling] = useState(false);
-    const [crawlStatus, setCrawlStatus] = useState<'idle' | 'crawling' | 'success' | 'error'>('idle');
-    const [report, setReport] = useState<IndexingReport | null>(null);
-    const [crawlError, setCrawlError] = useState('');
+    const [isCrawling, setIsCrawling]       = useState(false);
+    const [crawlStatus, setCrawlStatus]     = useState<'idle' | 'crawling' | 'success' | 'error'>('idle');
+    const [report, setReport]               = useState<IndexingReport | null>(null);
+    const [crawlError, setCrawlError]       = useState('');
 
     /* ── Chat state ── */
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [messages, setMessages]   = useState<Message[]>([]);
     const [isChatting, setIsChatting] = useState(false);
-    const [chatError, setChatError] = useState('');
+    const [chatError, setChatError]   = useState('');
 
-    /* Health check */
+    /* Backend health check — no dark mode, just connectivity */
     useEffect(() => {
         const check = async () => setIsBackendConnected(await api.checkHealth());
         check();
@@ -35,6 +35,7 @@ function App() {
         setCrawlError('');
         setReport(null);
         setMessages([]);
+        setChatError('');
         try {
             const r = await api.crawlWebsite(url);
             if (r.success) {
@@ -45,7 +46,11 @@ function App() {
             }
         } catch (err: any) {
             setCrawlStatus('error');
-            setCrawlError(err?.response?.data?.error || err?.message || 'Failed to crawl. Please check the URL.');
+            setCrawlError(
+                err?.response?.data?.error ||
+                err?.message ||
+                'Failed to crawl. Please check the URL.'
+            );
         } finally {
             setIsCrawling(false);
         }
@@ -63,8 +68,12 @@ function App() {
         try {
             await api.chatStream(
                 content,
-                chunk => setMessages(prev => prev.map(m => m.id === aiId ? { ...m, content: m.content + chunk } : m)),
-                sources => setMessages(prev => prev.map(m => m.id === aiId ? { ...m, sources } : m)),
+                chunk => setMessages(prev =>
+                    prev.map(m => m.id === aiId ? { ...m, content: m.content + chunk } : m)
+                ),
+                sources => setMessages(prev =>
+                    prev.map(m => m.id === aiId ? { ...m, sources } : m)
+                ),
                 err => setChatError(err),
             );
         } catch (err: any) {
@@ -84,10 +93,12 @@ function App() {
 
     return (
         <BrowserRouter>
-            <div className="min-h-screen bg-white text-gray-900 font-sans flex flex-col">
-                {/* Backend connectivity pill */}
+            {/* Single fixed light theme — no dark mode, no class toggling */}
+            <div className="min-h-screen bg-gray-50 text-gray-900 font-sans flex flex-col">
+
+                {/* Backend status — bottom-right corner, doesn't overlap anything */}
                 {isBackendConnected !== null && (
-                    <div className={`fixed bottom-4 right-4 z-50 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium shadow-sm border ${
+                    <div className={`fixed bottom-4 right-4 z-50 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium shadow border ${
                         isBackendConnected
                             ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
                             : 'border-red-200 bg-red-50 text-red-600'

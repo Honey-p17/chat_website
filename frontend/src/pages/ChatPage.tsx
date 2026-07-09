@@ -30,66 +30,80 @@ export function ChatPage({
     onReset,
 }: ChatPageProps) {
     const isIndexed = crawlStatus === 'success';
+    const isError   = crawlStatus === 'error';
 
     return (
-        <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-10 flex flex-col gap-8">
-            {/* Hero — hide once indexed */}
-            {crawlStatus === 'idle' && (
-                <HeroSection />
-            )}
+        /*
+         * Full-width page. A single centered column (max-w-4xl) holds everything.
+         * No fixed-width box, no leftover pixel values — fills the viewport.
+         */
+        <div className="w-full min-h-[calc(100vh-56px)] bg-gray-50">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 flex flex-col gap-6">
 
-            {/* URL input (always visible until indexed) */}
-            {!isIndexed && (
-                <WebsiteInput
-                    onCrawl={onCrawl}
-                    isCrawling={isCrawling}
-                    isIndexed={isIndexed}
-                    onReset={onReset}
-                />
-            )}
+                {/* ── Hero ── only when completely idle */}
+                {crawlStatus === 'idle' && (
+                    <HeroSection />
+                )}
 
-            {/* Indexed compact bar */}
-            {isIndexed && (
-                <WebsiteInput
-                    onCrawl={onCrawl}
-                    isCrawling={false}
-                    isIndexed={true}
-                    onReset={onReset}
-                />
-            )}
+                {/* ── URL input ── always visible until success */}
+                {!isIndexed && (
+                    <WebsiteInput
+                        onCrawl={onCrawl}
+                        isCrawling={isCrawling}
+                        isIndexed={false}
+                        onReset={onReset}
+                    />
+                )}
 
-            {/* Progress / status card */}
-            {crawlStatus !== 'idle' && (
-                <ProgressCard
-                    status={crawlStatus}
-                    report={report}
-                />
-            )}
+                {/* ── Compact "indexed" URL bar after success ── */}
+                {isIndexed && (
+                    <WebsiteInput
+                        onCrawl={onCrawl}
+                        isCrawling={false}
+                        isIndexed={true}
+                        onReset={onReset}
+                    />
+                )}
 
-            {/* Crawl error */}
-            {crawlError && (
-                <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600 animate-fade-in">
-                    {crawlError}
-                </div>
-            )}
+                {/* ── Progress / status banner ── */}
+                {crawlStatus !== 'idle' && (
+                    <ProgressCard status={crawlStatus} report={report} />
+                )}
 
-            {/* Chat error */}
-            {chatError && (
-                <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-2.5 text-sm text-amber-700 animate-fade-in">
-                    {chatError}
-                </div>
-            )}
+                {/* ── Crawl error with retry hint ── */}
+                {isError && crawlError && (
+                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3.5 flex flex-col gap-1 animate-fade-in">
+                        <p className="text-sm font-semibold text-red-700">Crawl failed</p>
+                        <p className="text-sm text-red-600">{crawlError}</p>
+                        <p className="text-xs text-red-400 mt-1">
+                            Check the URL above and click "Crawl Website" to try again.
+                        </p>
+                    </div>
+                )}
 
-            {/* Divider + chat interface */}
-            <div className="flex-1 flex flex-col">
-                {isIndexed && <div className="mb-4 h-px bg-gray-100" />}
-                <ChatWindow
-                    messages={messages}
-                    onSendMessage={onSendMessage}
-                    isLoading={isChatting}
-                    isIndexed={isIndexed}
-                />
+                {/* ── Chat error (during Q&A) ── */}
+                {chatError && isIndexed && (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 animate-fade-in">
+                        <p className="text-sm text-amber-700">{chatError}</p>
+                    </div>
+                )}
+
+                {/*
+                 * ── Chat panel ──
+                 * ONLY rendered after a successful crawl.
+                 * Before crawl completes: nothing here at all.
+                 * On error: nothing here (error banner above is enough).
+                 */}
+                {isIndexed && (
+                    <div className="animate-fade-in-up">
+                        <ChatWindow
+                            messages={messages}
+                            onSendMessage={onSendMessage}
+                            isLoading={isChatting}
+                        />
+                    </div>
+                )}
             </div>
-        </main>
+        </div>
     );
 }

@@ -8,39 +8,39 @@ interface MessageBubbleProps {
     sources?: Citation[];
 }
 
-/** Backend emits this exact string when no relevant context found */
 const REFUSAL_PHRASE = "I couldn't find this information on the crawled website.";
 
 export function MessageBubble({ role, content, sources }: MessageBubbleProps) {
     const isUser = role === 'user';
     const isRefusal = !isUser && content.includes(REFUSAL_PHRASE);
 
+    /* User message */
     if (isUser) {
         return (
-            <div className="flex justify-end mb-4">
-                <div className="max-w-[78%] px-4 py-2.5 rounded-2xl rounded-tr-sm bg-violet-600 text-white text-sm leading-relaxed">
+            <div className="flex justify-end mb-3">
+                <div className="max-w-[78%] px-4 py-2.5 rounded-2xl rounded-tr-sm bg-violet-600 text-white text-sm leading-relaxed break-words">
                     {content}
                 </div>
             </div>
         );
     }
 
-    /* Grounded refusal — muted/neutral, no sources */
+    /* Grounded refusal — muted, italic, no sources */
     if (isRefusal) {
         return (
-            <div className="flex justify-start mb-4">
-                <div className="max-w-[82%] px-4 py-3 rounded-2xl rounded-tl-sm border border-gray-200 bg-gray-50 text-gray-400 text-sm italic leading-relaxed">
+            <div className="flex justify-start mb-3">
+                <div className="max-w-[80%] px-4 py-3 rounded-2xl rounded-tl-sm border border-gray-200 bg-gray-50 text-gray-400 text-sm italic leading-relaxed">
                     {content}
                 </div>
             </div>
         );
     }
 
-    /* Normal assistant answer */
+    /* Normal assistant answer with markdown + sources */
     return (
-        <div className="flex justify-start mb-4">
-            <div className="max-w-[82%] flex flex-col gap-0">
-                <div className="px-4 py-3 rounded-2xl rounded-tl-sm border border-gray-200 bg-white text-gray-800 text-sm leading-relaxed shadow-sm">
+        <div className="flex justify-start mb-3">
+            <div className="max-w-[80%] flex flex-col">
+                <div className="px-4 py-3 rounded-2xl rounded-tl-sm border border-gray-200 bg-white text-gray-800 text-sm leading-relaxed shadow-sm break-words">
                     {content ? (
                         <div className="prose prose-sm max-w-none
                             prose-p:my-1 prose-p:leading-relaxed
@@ -54,15 +54,13 @@ export function MessageBubble({ role, content, sources }: MessageBubbleProps) {
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
                         </div>
                     ) : (
-                        /* Typing indicator while streaming */
-                        <div className="flex items-center gap-1 h-5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dot-bounce" />
-                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dot-bounce-2" />
-                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dot-bounce-3" />
-                        </div>
+                        /* Streaming cursor while tokens are arriving */
+                        <span className="inline-block w-2 h-4 bg-gray-300 animate-pulse rounded-sm align-middle" />
                     )}
                 </div>
-                {sources && sources.length > 0 && <SourcesCard sources={sources} />}
+                {sources && sources.length > 0 && (
+                    <SourcesCard sources={sources} />
+                )}
             </div>
         </div>
     );

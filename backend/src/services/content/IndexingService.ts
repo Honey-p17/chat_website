@@ -22,6 +22,11 @@ export class IndexingService {
         console.log(`\n--- Starting BFS Indexing for ${startUrl} ---`);
 
         try {
+            // 0. Reset the collection to prevent cross-site data contamination.
+            //    Every new crawl gets a clean slate — chunks from the previous
+            //    site are deleted before the new site is indexed.
+            await chromaService.resetCollection();
+
             // 1. Crawl Domain
             const pages = await CrawlerService.crawlDomain(startUrl, 5);
             if (pages.length === 0) {
