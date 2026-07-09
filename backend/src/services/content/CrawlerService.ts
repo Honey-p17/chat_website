@@ -8,7 +8,7 @@ export interface CrawledPage {
 }
 
 export class CrawlerService {
-    private static MAX_PAGES = 5;
+    private static MAX_PAGES = 2;
     private static DELAY_MS = 1000;
 
     static async crawlDomain(startUrl: string, maxPages = CrawlerService.MAX_PAGES): Promise<CrawledPage[]> {
