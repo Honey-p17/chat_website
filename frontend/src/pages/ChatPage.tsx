@@ -25,7 +25,7 @@ export function ChatPage() {
                     Chat with Website <Sparkles className="w-10 h-10 text-[#8553f8]" fill="currentColor" />
                 </h1>
                 <p className="text-sm md:text-base text-slate-500 font-medium">
-                    Crawl any website and get AI-powered answers from its content
+                    Turn any website into an intelligent, interactive knowledge base instantly
                 </p>
             </div>
 

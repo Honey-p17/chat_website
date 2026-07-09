@@ -70,13 +70,20 @@ When a question is submitted via `POST /api/chat`:
 3. A `Retriever` discards any chunks falling below a strict similarity threshold.
 4. If valid chunks exist, they are injected into a highly constrained Prompt template.
 5. `gemini-1.5-flash` processes the prompt and returns a strictly grounded answer.
-6. The backend formats the response and deduplicates source URL citations before pushing them to the UI.
+6. **Streaming:** The backend streams the AI response token-by-token back to the frontend using Server-Sent Events (SSE) for a highly responsive, real-time UX.
+7. The backend formats the final response and deduplicates source URL citations before pushing them to the UI.
 
 ## API Endpoints
 
 - **`GET /health`**: Returns backend availability status.
 - **`POST /api/crawl`**: Accepts `{ url, html, depth }`. Orchestrates crawling, chunking, and embedding. Returns an `IndexingReport`.
 - **`POST /api/chat`**: Accepts `{ question }`. Returns `{ success, answer, sources }`.
+
+## Stretch Goals Met
+
+- **Streaming Responses:** Built using Server-Sent Events (SSE) to stream back LLM answers in real-time token-by-token.
+- **Aggressive Boilerplate Stripping:** Using Cheerio to strip out footers, headers, navs, ads, script tags, cookie banners, and social links to index only semantic content.
+- **Automated Evaluations:** A basic evaluation suite is implemented in `backend/scripts/eval.ts` which runs test questions against the indexed vector store to assert the presence of expected keywords. Run it with `npx ts-node scripts/eval.ts` in the `backend` directory.
 
 ## Installation & Running Locally
 
@@ -101,7 +108,7 @@ When a question is submitted via `POST /api/chat`:
 2. `npm install`
 3. Create `.env` file:
    ```env
-   VITE_API_URL=http://localhost:5000
+   VITE_API_URL=http://localhost:5000/api
    ```
 4. `npm run dev`
 
@@ -110,6 +117,5 @@ When a question is submitted via `POST /api/chat`:
 - Chunk overlaps are currently estimated by splitting on primitive sentence regex markers, which could struggle against complex semantic abbreviations.
 
 ## Future Improvements
-- **WebSockets / Server-Sent Events (SSE):** Streaming the AI responses token-by-token directly to the frontend for better perceived performance.
 - **GraphRAG:** Mapping knowledge graphs between chunks to answer holistic, multi-hop queries across the domain rather than strict localized chunks.
 - **Playwright Crawler Integration:** Handling headless browser crawling for modern JS-heavy sites.

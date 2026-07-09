@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, createContext, useContext, ReactNode } from 'react';
 import { api, IndexingReport, Citation } from '../services/api';
 
 export type CrawlStatus = 'idle' | 'crawling' | 'success' | 'error';
@@ -9,7 +9,7 @@ export interface Message {
     sources?: Citation[];
 }
 
-export function useCrawl() {
+function useCrawlInternal() {
     const [crawlStatus, setCrawlStatus] = useState<CrawlStatus>('idle');
     const [crawlError, setCrawlError] = useState('');
     const [report, setReport] = useState<IndexingReport | null>(null);
@@ -108,7 +108,12 @@ export function useCrawl() {
                         try {
                             const parsed = JSON.parse(dataStr);
                             if (parsed.error) {
-                                throw new Error(parsed.error);
+                                const errMsg = typeof parsed.error === 'string' ? parsed.error : JSON.stringify(parsed.error);
+                                setMessages((prev) => {
+                                    const last = prev[prev.length - 1];
+                                    return [...prev.slice(0, -1), { ...last, content: `**Error:** ${errMsg}` }];
+                                });
+                                break;
                             }
 
                             setMessages((prev) => {
@@ -169,4 +174,20 @@ export function useCrawl() {
         handleSendMessage,
         handleReset
     };
+}
+
+type CrawlContextType = ReturnType<typeof useCrawlInternal>;
+const CrawlContext = createContext<CrawlContextType | null>(null);
+
+export function CrawlProvider({ children }: { children: ReactNode }) {
+    const crawlState = useCrawlInternal();
+    return <CrawlContext.Provider value={crawlState}>{children}</CrawlContext.Provider>;
+}
+
+export function useCrawl() {
+    const context = useContext(CrawlContext);
+    if (!context) {
+        throw new Error('useCrawl must be used within a CrawlProvider');
+    }
+    return context;
 }

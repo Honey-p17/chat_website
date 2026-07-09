@@ -88,9 +88,31 @@ export class ChatService {
         } catch (error: any) {
             console.error('Chat error:', error);
             
+            // Fallback for Rate Limits
+            if (error?.status === 429 || error?.code === 429 || error?.message?.includes('quota') || error?.message?.includes('429')) {
+                console.warn('Gemini Rate Limit hit. Mocking response.');
+                const mockAnswer = "This is a simulated AI response. **You have exceeded your Gemini API quota (Rate Limit).** However, the backend pipeline successfully performed vector similarity search to find relevant context from the website! ";
+                const words = mockAnswer.split(' ');
+                for (const word of words) {
+                    res.write(`data: ${JSON.stringify({ chunk: word + ' ' })}\n\n`);
+                    await new Promise(r => setTimeout(r, 50));
+                }
+                
+                if (relevantChunks && relevantChunks.length > 0) {
+                    const formatted = ResponseFormatter.format(mockAnswer, relevantChunks);
+                    res.write(`data: ${JSON.stringify({ sources: formatted.sources })}\n\n`);
+                } else {
+                    res.write(`data: ${JSON.stringify({ sources: [] })}\n\n`);
+                }
+                
+                res.write(`data: [DONE]\n\n`);
+                res.end();
+                return;
+            }
+
             // Fallback for API Key errors in sandbox
             if (error?.status === 400 || error?.status === 404 || error?.message?.includes('API key')) {
-                console.warn('API Key missing. Mocking Gemini response stream.');
+                console.warn('API Key missing or invalid. Mocking Gemini response stream.');
                 const mockAnswer = "This is a simulated AI response. Since no valid Gemini API key is present in `.env`, the system is in demo mode. The backend pipeline successfully parsed, chunked, and embedded the website, and performed vector similarity search to find relevant context! ";
                 const words = mockAnswer.split(' ');
                 for (const word of words) {
